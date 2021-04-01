@@ -1,6 +1,6 @@
 /*
  * Copyright 2014-2015 Ludwig M Brinckmann
- * Copyright 2015-2017 devemux86
+ * Copyright 2015-2019 devemux86
  * Copyright 2015 Andreas Schildbach
  * Copyright 2017 usrusr
  *
@@ -34,8 +34,10 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.mapsforge.core.model.Dimension;
 import org.mapsforge.core.model.LatLong;
 import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.util.LatLongUtils;
 import org.mapsforge.core.util.Parameters;
 import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
 import org.mapsforge.map.android.input.MapZoomControls.Orientation;
@@ -45,7 +47,7 @@ import org.mapsforge.map.layer.cache.TileCache;
 import org.mapsforge.map.layer.renderer.MapWorkerPool;
 import org.mapsforge.map.layer.renderer.TileRendererLayer;
 import org.mapsforge.map.model.DisplayModel;
-import org.mapsforge.map.model.MapViewPosition;
+import org.mapsforge.map.model.IMapViewPosition;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.scalebar.ImperialUnitAdapter;
 import org.mapsforge.map.scalebar.MetricUnitAdapter;
@@ -65,8 +67,6 @@ public abstract class SamplesBaseActivity extends MapViewerTemplate implements S
     public static final String SETTING_SCALEBAR_BOTH = "both";
     public static final String SETTING_SCALEBAR_NONE = "none";
 
-    public static final LatLong LATLONG_BERLIN = new LatLong(52.517037, 13.38886);
-
     protected static final int DIALOG_ENTER_COORDINATES = 2923878;
     protected SharedPreferences sharedPreferences;
 
@@ -81,8 +81,10 @@ public abstract class SamplesBaseActivity extends MapViewerTemplate implements S
     }
 
     @Override
-    protected MapPosition getDefaultInitialPosition() {
-        return new MapPosition(LATLONG_BERLIN, (byte) 12);
+    protected MapPosition getInitialPosition() {
+        int tileSize = this.mapView.getModel().displayModel.getTileSize();
+        byte zoomLevel = LatLongUtils.zoomForBounds(new Dimension(tileSize * 4, tileSize * 4), getMapFile().boundingBox(), tileSize);
+        return new MapPosition(getMapFile().boundingBox().getCenterPoint(), zoomLevel);
     }
 
     @Override
@@ -104,9 +106,6 @@ public abstract class SamplesBaseActivity extends MapViewerTemplate implements S
 
     @Override
     protected void createMapViews() {
-        // Frame buffer HA2
-        Parameters.FRAME_BUFFER_HA2 = true;
-
         super.createMapViews();
 
         mapView.getMapZoomControls().setZoomControlsOrientation(Orientation.VERTICAL_IN_OUT);
@@ -131,7 +130,7 @@ public abstract class SamplesBaseActivity extends MapViewerTemplate implements S
         if (mapfile != null) {
             return mapfile;
         }
-        return "germany.map";
+        return "berlin.map";
     }
 
     @Override
@@ -243,7 +242,7 @@ public abstract class SamplesBaseActivity extends MapViewerTemplate implements S
     @Override
     protected void onPrepareDialog(int id, final Dialog dialog) {
         if (id == DIALOG_ENTER_COORDINATES) {
-            MapViewPosition currentPosition = SamplesBaseActivity.this.mapView.getModel().mapViewPosition;
+            IMapViewPosition currentPosition = SamplesBaseActivity.this.mapView.getModel().mapViewPosition;
             LatLong currentCenter = currentPosition.getCenter();
             EditText editText = (EditText) dialog.findViewById(R.id.latitude);
             editText.setText(Double.toString(currentCenter.latitude));

@@ -1,6 +1,6 @@
 /*
  * Copyright 2013-2015 Ludwig M Brinckmann
- * Copyright 2014-2017 devemux86
+ * Copyright 2014-2020 devemux86
  * Copyright 2017 usrusr
  *
  * This program is free software: you can redistribute it and/or modify it under the
@@ -35,7 +35,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
 
 /**
@@ -90,17 +89,14 @@ public class Samples extends Activity {
 
         setContentView(R.layout.activity_samples);
         LinearLayout linearLayout = findViewById(R.id.samples);
-        linearLayout.addView(createButton(DefaultTheme.class));
-        linearLayout.addView(createButton(DiagnosticsMapViewer.class));
+        linearLayout.addView(createButton(GettingStarted.class));
+        linearLayout.addView(createLabel(null));
+        linearLayout.addView(createButton(MapsforgeMapViewer.class));
         linearLayout.addView(createButton(SimplestMapViewer.class));
+        linearLayout.addView(createButton(DiagnosticsMapViewer.class));
 
         linearLayout.addView(createLabel("Features"));
-        linearLayout.addView(createButton(null, "GraphHopper Routing", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/graphhopper/graphhopper/tree/0.8/android")));
-            }
-        }));
+        linearLayout.addView(createButton(LocationOverlayMapViewer.class));
         linearLayout.addView(createButton(PoiSearchViewer.class, null, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -124,31 +120,16 @@ public class Samples extends Activity {
 
         linearLayout.addView(createLabel("Overlays"));
         linearLayout.addView(createButton(OverlayMapViewer.class));
-        linearLayout.addView(createButton(GridMapViewer.class));
         linearLayout.addView(createButton(BubbleOverlay.class));
         linearLayout.addView(createButton(ViewOverlayViewer.class));
-        linearLayout.addView(createButton(LocationOverlayMapViewer.class));
-        linearLayout.addView(createButton(ChangingBitmaps.class));
-        linearLayout.addView(createButton(OverlayWithoutBaseMapViewer.class));
-        linearLayout.addView(createButton(TwoMaps.class, null, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startupDialog("twomaps", R.string.startup_message_twomaps, TwoMaps.class);
-            }
-        }));
 
         linearLayout.addView(createLabel("User Interaction"));
         linearLayout.addView(createButton(LongPressAction.class));
-        linearLayout.addView(createButton(MoveAnimation.class));
-        linearLayout.addView(createButton(ZoomToBounds.class));
         linearLayout.addView(createButton(ItemListActivity.class));
         linearLayout.addView(createButton(RotateMapViewer.class));
 
         linearLayout.addView(createLabel("Dual Map Views"));
         linearLayout.addView(createButton(DualMapViewer.class));
-        linearLayout.addView(createButton(DualMapViewerWithDifferentDisplayModels.class));
-        linearLayout.addView(createButton(DualMapViewerWithClampedTileSizes.class));
-        linearLayout.addView(createButton(DualMapnikMapViewer.class));
         linearLayout.addView(createButton(DualOverviewMapViewer.class));
         linearLayout.addView(createButton(MultiMapLowResWorld.class, null, new View.OnClickListener() {
             @Override
@@ -163,9 +144,9 @@ public class Samples extends Activity {
                             // TODO show progress and wait for download
                             DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
                             DownloadManager.Request downloadRequest = new DownloadManager.Request(
-                                    Uri.parse("http://download.mapsforge.org/maps/world/world.map"));
+                                    Uri.parse("https://download.mapsforge.org/maps/world/world.map"));
                             downloadRequest.setDescription("Mapsforge low-res world map");
-                            downloadRequest.setDestinationInExternalFilesDir(Samples.this, SamplesApplication.MAPS, MultiMapLowResWorld.getWorldMapFileName());
+                            downloadRequest.setDestinationInExternalFilesDir(Samples.this, null, MultiMapLowResWorld.getWorldMapFileName());
                             downloadManager.enqueue(downloadRequest);
                         }
                     });
@@ -175,22 +156,12 @@ public class Samples extends Activity {
                 }
             }
         }));
-        linearLayout.addView(createButton(SimpleDataStoreMapViewer.class));
 
         linearLayout.addView(createLabel("Experiments"));
         linearLayout.addView(createButton(HillshadingMapViewer.class));
-        linearLayout.addView(createButton(HillshadingMapViewerFaster.class));
-        linearLayout.addView(createButton(HillshadingMapViewerDiffuseShading.class));
-        linearLayout.addView(createButton(HillshadingCompareMapViewer.class));
         linearLayout.addView(createButton(ReverseGeocodeViewer.class));
-        linearLayout.addView(createButton(NightModeViewer.class));
-        linearLayout.addView(createButton(RenderThemeChanger.class));
-        linearLayout.addView(createButton(TileSizeChanger.class));
-        linearLayout.addView(createButton(StackedLayersMapViewer.class));
-        linearLayout.addView(createButton(NoXMLLayout.class));
-        linearLayout.addView(createButton(LabelLayerUsingMapDataStoreMapViewer.class));
-        linearLayout.addView(createButton(LabelLayerUsingMapDataStoreMapViewerThreaded.class));
         linearLayout.addView(createButton(LabelLayerUsingLabelCacheMapViewer.class));
+        linearLayout.addView(createButton(LabelLayerUsingMapDataStoreMapViewer.class));
         linearLayout.addView(createButton(ClusterMapActivity.class));
         linearLayout.addView(createButton(GroupMarkerExample.class));
     }

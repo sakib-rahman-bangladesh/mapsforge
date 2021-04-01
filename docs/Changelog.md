@@ -1,15 +1,93 @@
 # Changelog
 
-## New since 0.9.0
+## New since 0.15.0
 
-- Deprecate mapsforge-map-android-extras [#1021](https://github.com/mapsforge/mapsforge/issues/1021)
+- Android: scoped storage map / theme example [#1186](https://github.com/mapsforge/mapsforge/pull/1186)
+- Render theme from zip archive [#1186](https://github.com/mapsforge/mapsforge/pull/1186)
+- Render themes: custom resource providers [#1186](https://github.com/mapsforge/mapsforge/pull/1186)
+- Nautical unit adapter with feet [#1188](https://github.com/mapsforge/mapsforge/pull/1188)
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.16.0)
+
+## Version 0.15.0 (2021-01-01)
+
+- Android: scoped storage map example [#1170](https://github.com/mapsforge/mapsforge/pull/1170)
+- Render theme from Android content providers [#1169](https://github.com/mapsforge/mapsforge/pull/1169)
+- Render themes: symbol and lineSymbol position attribute [#1172](https://github.com/mapsforge/mapsforge/pull/1172)
+- Hillshading from zipped HGT [#1181](https://github.com/mapsforge/mapsforge/pull/1181)
+- AssetsRenderTheme: stream improvements [#1167](https://github.com/mapsforge/mapsforge/pull/1167)
+- Map frame buffer improvements [#1178](https://github.com/mapsforge/mapsforge/pull/1178)
+  - `Parameters.FRAME_BUFFER_HA3`
+- Symbol scale option [#1179](https://github.com/mapsforge/mapsforge/pull/1179)
+  - `Parameters.SYMBOL_SCALING`
+- Layer scroll event option [#1163](https://github.com/mapsforge/mapsforge/pull/1163)
+  - `Parameters.LAYER_SCROLL_EVENT`
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.15.0)
+
+## Version 0.14.0 (2020-08-25)
+
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.14.0)
+
+## Version 0.13.0 (2020-01-12)
+
+- Fix marker placement on Android 9+ [#1138](https://github.com/mapsforge/mapsforge/issues/1138)
+- Fix hillshading on Android 8+ [#1131](https://github.com/mapsforge/mapsforge/pull/1131)
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.13.0)
+
+## Version 0.12.0 (2019-09-17)
+
+- Curved path text rendering [#1112](https://github.com/mapsforge/mapsforge/pull/1112)
+- POI writer: normalize names option [#1123](https://github.com/mapsforge/mapsforge/pull/1123)
+- Layer groups implementation [#1116](https://github.com/mapsforge/mapsforge/issues/1116)
+- Android 10 compatibility [#1120](https://github.com/mapsforge/mapsforge/issues/1120)
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.12.0)
+
+## Version 0.11.0 (2019-03-25)
+
+- Render themes: PNG scaling [#1090](https://github.com/mapsforge/mapsforge/issues/1090)
+- Polyline scaled width [#1088](https://github.com/mapsforge/mapsforge/issues/1088)
+- Hillshading in style menu [#1095](https://github.com/mapsforge/mapsforge/issues/1095)
+- `ThemeCallback.getColor` refactor [#912](https://github.com/mapsforge/mapsforge/issues/912)
+- Parent tiles rendering quality option [#1102](https://github.com/mapsforge/mapsforge/pull/1102)
+  - `Parameters.PARENT_TILES_RENDERING`
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.11.0)
+
+## Version 0.10.0 (2018-08-28)
+
+- Mapsforge maps **v5**: custom tag keys [#1041](https://github.com/mapsforge/mapsforge/issues/1041)
+- Read & render polygon label/symbol position [#1064](https://github.com/mapsforge/mapsforge/issues/1064)
+- Map writer: polygon label/symbol centroid [#1061](https://github.com/mapsforge/mapsforge/issues/1061)
+- POI: SQLite Android Bindings [#1079](https://github.com/mapsforge/mapsforge/issues/1079)
+- POI: offline address search [#1063](https://github.com/mapsforge/mapsforge/issues/1063)
+- POI writer: tag keys as categories [#1062](https://github.com/mapsforge/mapsforge/pull/1062)
+- POI writer: latest Java compatibility [#1083](https://github.com/mapsforge/mapsforge/issues/1083)
+- MyLocationOverlay implementation [#1035](https://github.com/mapsforge/mapsforge/issues/1035)
+- Polyline / Polygon rendering optimizations [#1057](https://github.com/mapsforge/mapsforge/issues/1057)
+- Tile sources with api keys [#1028](https://github.com/mapsforge/mapsforge/issues/1028)
+- Render theme fallback internal resources [#1026](https://github.com/mapsforge/mapsforge/issues/1026)
+- MapViewPosition interface [#1044](https://github.com/mapsforge/mapsforge/pull/1044)
+- Android 9 compatibility [#1066](https://github.com/mapsforge/mapsforge/issues/1066)
+- JTS (LocationTech) [#1027](https://github.com/mapsforge/mapsforge/issues/1027)
+- SVG Salamander (JitPack) [#1078](https://github.com/mapsforge/mapsforge/issues/1078)
 - Many other minor improvements and bug fixes
 - [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.10.0)
 
+## Version 0.9.1 (2018-01-04)
+
+- Gradle fix transitive dependencies [#1009](https://github.com/mapsforge/mapsforge/issues/1009)
+- Deprecate mapsforge-map-android-extras [#1021](https://github.com/mapsforge/mapsforge/issues/1021)
+- Many other minor improvements and bug fixes
+- [Solved issues](https://github.com/mapsforge/mapsforge/issues?q=is%3Aclosed+milestone%3A0.9.1)
+
 ## Version 0.9.0 (2017-12-03)
 
-- Mapsforge maps **v5 beta**: variable tag values [#1006](https://github.com/mapsforge/mapsforge/pull/1006)
-- Mapsforge maps **v5 beta**: implicit relations of building parts [#1014](https://github.com/mapsforge/mapsforge/pull/1014)
+- Mapsforge maps **v5**: variable tag values [#1006](https://github.com/mapsforge/mapsforge/pull/1006)
+- Mapsforge maps **v5**: implicit relations of building parts [#1014](https://github.com/mapsforge/mapsforge/pull/1014)
 - Map frame buffer improvements [#977](https://github.com/mapsforge/mapsforge/issues/977)
 - Hillshading improvements [#923](https://github.com/mapsforge/mapsforge/issues/923)
 - Polyline overlay touch events [#998](https://github.com/mapsforge/mapsforge/issues/998)
@@ -61,7 +139,8 @@
 - mapsforge-themes module [#848](https://github.com/mapsforge/mapsforge/issues/848)
 - New default internal render theme [#903](https://github.com/mapsforge/mapsforge/issues/903)
 - Internal render themes new SVG resources [#904](https://github.com/mapsforge/mapsforge/issues/904)
-- Render theme resources without location prefixes [#847](https://github.com/mapsforge/mapsforge/issues/847)
+- Render theme resources optional location prefixes [#847](https://github.com/mapsforge/mapsforge/issues/847)
+- Render theme from input stream [#872](https://github.com/mapsforge/mapsforge/issues/872)
 - SpatiaLite natives published artifacts [#849](https://github.com/mapsforge/mapsforge/issues/849)
 - SNAPSHOT builds publish to Sonatype OSSRH [#873](https://github.com/mapsforge/mapsforge/issues/873)
 - Deprecate Maven build [#852](https://github.com/mapsforge/mapsforge/issues/852)

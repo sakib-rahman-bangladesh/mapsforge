@@ -3,9 +3,9 @@
  * Copyright 2015 lincomatic
  * Copyright 2016 Andrey Novikov
  * Copyright 2016 mikes222
- * Copyright 2016-2017 devemux86
+ * Copyright 2016-2018 devemux86
  * Copyright 2017 Ludwig M Brinckmann
- * Copyright 2017 Gustl22
+ * Copyright 2017-2019 Gustl22
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -24,13 +24,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
 
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.mapsforge.core.model.LatLong;
 import org.mapsforge.core.util.LatLongUtils;
 import org.mapsforge.core.util.MercatorProjection;
@@ -56,7 +56,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -182,7 +181,7 @@ public final class MapFileWriter {
             short subtileMask = GeoUtils.computeBitmask(processedGeometry, this.tile,
                     this.configuration.getBboxEnlargement());
 
-            // Compute the label coordinates of the unclipped polygon
+            // Compute the label/symbol coordinates of the non clipped polygon
             LatLong labelCoordinate = null;
             if (this.way.isValidClosedLine()) {
                 boolean labelPosition = this.configuration.isLabelPosition();
@@ -195,8 +194,12 @@ public final class MapFileWriter {
                     }
                 }
                 if (labelPosition) {
-                    Point labelPoint = PolyLabel.get(originalGeometry);
-                    labelCoordinate = new LatLong(labelPoint.getY(), labelPoint.getX());
+                    if (this.configuration.isPolylabel()) {
+                        Point labelPoint = PolyLabel.get(originalGeometry);
+                        labelCoordinate = new LatLong(labelPoint.getY(), labelPoint.getX());
+                    } else {
+                        labelCoordinate = GeoUtils.computeInteriorPoint(originalGeometry);
+                    }
                 }
             }
 
@@ -448,7 +451,7 @@ public final class MapFileWriter {
         int tagAmount = node.getTags() == null ? 0 : node.getTags().size();
         if (tagAmount > (1 << HALF_BYTE_SHIFT) - 1) {
             // See #971
-            LOGGER.info(Arrays.toString(node.getTags().keySet().toArray()) + "\n" + Arrays.toString(node.getTags().values().toArray()));
+            LOGGER.severe("Too many tags: " + node.toStringDetailed());
             throw new RuntimeException("more than 15 tags aren't supported");
         }
         return (byte) (layer << HALF_BYTE_SHIFT | (short) tagAmount);
@@ -490,7 +493,7 @@ public final class MapFileWriter {
         int tagAmount = way.getTags() == null ? 0 : way.getTags().size();
         if (tagAmount > (1 << HALF_BYTE_SHIFT) - 1) {
             // See #971
-            LOGGER.info(Arrays.toString(way.getTags().keySet().toArray()) + "\n" + Arrays.toString(way.getTags().values().toArray()));
+            LOGGER.severe("Too many tags: " + way.toStringDetailed());
             throw new RuntimeException("more than 15 tags aren't supported");
         }
         return (byte) (layer << HALF_BYTE_SHIFT | (short) tagAmount);

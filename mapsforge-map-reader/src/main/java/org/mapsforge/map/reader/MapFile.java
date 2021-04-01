@@ -1,7 +1,7 @@
 /*
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014-2015 Ludwig M Brinckmann
- * Copyright 2014-2017 devemux86
+ * Copyright 2014-2020 devemux86
  * Copyright 2015-2016 lincomatic
  * Copyright 2016 bvgastel
  * Copyright 2017 linuskr
@@ -27,11 +27,7 @@ import org.mapsforge.core.model.Tile;
 import org.mapsforge.core.util.LatLongUtils;
 import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.core.util.Parameters;
-import org.mapsforge.map.datastore.MapDataStore;
-import org.mapsforge.map.datastore.MapReadResult;
-import org.mapsforge.map.datastore.PoiWayBundle;
-import org.mapsforge.map.datastore.PointOfInterest;
-import org.mapsforge.map.datastore.Way;
+import org.mapsforge.map.datastore.*;
 import org.mapsforge.map.reader.header.MapFileException;
 import org.mapsforge.map.reader.header.MapFileHeader;
 import org.mapsforge.map.reader.header.MapFileInfo;
@@ -246,6 +242,77 @@ public class MapFile extends MapDataStore {
             closeFileChannel();
             throw new MapFileException(e.getMessage());
         }
+    }
+
+    /**
+     * Opens the given map file input stream, reads its header data and validates them.
+     *
+     * @param mapFileInputStream the map file input stream.
+     * @throws MapFileException if the given map file is null or invalid.
+     */
+    public MapFile(FileInputStream mapFileInputStream) {
+        this(mapFileInputStream, null);
+    }
+
+    /**
+     * Opens the given map file input stream, reads its header data and validates them.
+     *
+     * @param mapFileInputStream the map file input stream.
+     * @param language           the language to use (may be null).
+     * @throws MapFileException if the given map file is null or invalid.
+     */
+    public MapFile(FileInputStream mapFileInputStream, String language) {
+        this(mapFileInputStream, System.currentTimeMillis(), language);
+    }
+
+    /**
+     * Opens the given map file input stream, reads its header data and validates them.
+     *
+     * @param mapFileInputStream the map file input stream.
+     * @param language           the language to use (may be null).
+     * @throws MapFileException if the given map file is null or invalid.
+     */
+    public MapFile(FileInputStream mapFileInputStream, long lastModified, String language) {
+        super(language);
+        if (mapFileInputStream == null) {
+            throw new MapFileException("mapFileInputStream must not be null");
+        }
+        try {
+            this.inputChannel = mapFileInputStream.getChannel();
+            this.fileSize = this.inputChannel.size();
+
+            ReadBuffer readBuffer = new ReadBuffer(this.inputChannel);
+            this.mapFileHeader = new MapFileHeader();
+            this.mapFileHeader.readHeader(readBuffer, this.fileSize);
+            this.databaseIndexCache = new IndexCache(this.inputChannel, INDEX_CACHE_SIZE);
+
+            this.timestamp = lastModified;
+        } catch (Exception e) {
+            // make sure that the channel is closed
+            closeFileChannel();
+            throw new MapFileException(e.getMessage());
+        }
+    }
+
+    /**
+     * Opens the given map file channel, reads its header data and validates them.
+     *
+     * @param mapFileChannel the map file channel.
+     * @throws MapFileException if the given map file channel is null or invalid.
+     */
+    public MapFile(FileChannel mapFileChannel) {
+        this(mapFileChannel, null);
+    }
+
+    /**
+     * Opens the given map file channel, reads its header data and validates them.
+     *
+     * @param mapFileChannel the map file channel.
+     * @param language       the language to use (may be null).
+     * @throws MapFileException if the given map file channel is null or invalid.
+     */
+    public MapFile(FileChannel mapFileChannel, String language) {
+        this(mapFileChannel, System.currentTimeMillis(), language);
     }
 
     /**
@@ -796,7 +863,10 @@ public class MapFile extends MapDataStore {
                 tags.add(new Tag(TAG_KEY_REF, readBuffer.readUTF8EncodedString()));
             }
 
-            LatLong labelPosition = readOptionalLabelPosition(tileLatitude, tileLongitude, featureLabelPosition, readBuffer);
+            int[] labelPosition = null;
+            if (featureLabelPosition) {
+                labelPosition = readOptionalLabelPosition(readBuffer);
+            }
 
             int wayDataBlocks = readOptionalWayDataBlocksByte(featureWayDataBlocksByte, readBuffer);
             if (wayDataBlocks < 1) {
@@ -811,7 +881,12 @@ public class MapFile extends MapDataStore {
                         continue;
                     }
                     if (Selector.ALL == selector || featureName || featureHouseNumber || featureRef || wayAsLabelTagFilter(tags)) {
-                        ways.add(new Way(layer, tags, wayNodes, labelPosition));
+                        LatLong labelLatLong = null;
+                        if (labelPosition != null) {
+                            labelLatLong = new LatLong(wayNodes[0][0].latitude + LatLongUtils.microdegreesToDegrees(labelPosition[1]),
+                                    wayNodes[0][0].longitude + LatLongUtils.microdegreesToDegrees(labelPosition[0]));
+                        }
+                        ways.add(new Way(layer, tags, wayNodes, labelLatLong));
                     }
                 }
             }
@@ -899,18 +974,16 @@ public class MapFile extends MapDataStore {
         }
     }
 
-    private LatLong readOptionalLabelPosition(double tileLatitude, double tileLongitude, boolean featureLabelPosition, ReadBuffer readBuffer) {
-        if (featureLabelPosition) {
-            // get the label position latitude offset (VBE-S)
-            double latitude = tileLatitude + LatLongUtils.microdegreesToDegrees(readBuffer.readSignedInt());
+    private int[] readOptionalLabelPosition(ReadBuffer readBuffer) {
+        int[] labelPosition = new int[2];
 
-            // get the label position longitude offset (VBE-S)
-            double longitude = tileLongitude + LatLongUtils.microdegreesToDegrees(readBuffer.readSignedInt());
+        // get the label position latitude offset (VBE-S)
+        labelPosition[1] = readBuffer.readSignedInt();
 
-            return new LatLong(latitude, longitude);
-        }
+        // get the label position longitude offset (VBE-S)
+        labelPosition[0] = readBuffer.readSignedInt();
 
-        return null;
+        return labelPosition;
     }
 
     private int readOptionalWayDataBlocksByte(boolean featureWayDataBlocksByte, ReadBuffer readBuffer) {

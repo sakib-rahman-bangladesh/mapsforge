@@ -1,7 +1,7 @@
 /*
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014-2015 Ludwig M Brinckmann
- * Copyright 2014-2016 devemux86
+ * Copyright 2014-2019 devemux86
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -16,18 +16,13 @@
  */
 package org.mapsforge.map.rendertheme.renderinstruction;
 
-import org.mapsforge.core.graphics.Bitmap;
-import org.mapsforge.core.graphics.Cap;
-import org.mapsforge.core.graphics.Color;
-import org.mapsforge.core.graphics.GraphicFactory;
-import org.mapsforge.core.graphics.Join;
-import org.mapsforge.core.graphics.Paint;
-import org.mapsforge.core.graphics.Style;
+import org.mapsforge.core.graphics.*;
 import org.mapsforge.map.datastore.PointOfInterest;
 import org.mapsforge.map.layer.renderer.PolylineContainer;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.rendertheme.RenderCallback;
 import org.mapsforge.map.rendertheme.RenderContext;
+import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.XmlUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -48,6 +43,7 @@ public class Line extends RenderInstruction {
     private final Map<Byte, Float> dyScaled;
     private final int level;
     private final String relativePathPrefix;
+    private final XmlThemeResourceProvider resourceProvider;
     private Scale scale = Scale.STROKE;
     private Bitmap shaderBitmap;
     private String src;
@@ -57,10 +53,11 @@ public class Line extends RenderInstruction {
     private float strokeWidth;
 
     public Line(GraphicFactory graphicFactory, DisplayModel displayModel, String elementName,
-                XmlPullParser pullParser, int level, String relativePathPrefix) throws IOException, XmlPullParserException {
+                XmlPullParser pullParser, int level, String relativePathPrefix, XmlThemeResourceProvider resourceProvider) throws IOException, XmlPullParserException {
         super(graphicFactory, displayModel);
         this.level = level;
         this.relativePathPrefix = relativePathPrefix;
+        this.resourceProvider = resourceProvider;
 
         this.stroke = graphicFactory.createPaint();
         this.stroke.setColor(Color.BLACK);
@@ -93,7 +90,7 @@ public class Line extends RenderInstruction {
             } else if (SCALE.equals(name)) {
                 this.scale = scaleFromValue(value);
             } else if (STROKE.equals(name)) {
-                this.stroke.setColor(XmlUtils.getColor(graphicFactory, value, displayModel.getThemeCallback()));
+                this.stroke.setColor(XmlUtils.getColor(graphicFactory, value, displayModel.getThemeCallback(), this));
             } else if (STROKE_DASHARRAY.equals(name)) {
                 this.strokeDasharray = parseFloatArray(name, value);
                 for (int f = 0; f < this.strokeDasharray.length; ++f) {
@@ -146,7 +143,7 @@ public class Line extends RenderInstruction {
     public synchronized void renderWay(RenderCallback renderCallback, final RenderContext renderContext, PolylineContainer way) {
         if (!bitmapCreated) {
             try {
-                shaderBitmap = createBitmap(relativePathPrefix, src);
+                shaderBitmap = createBitmap(relativePathPrefix, src, resourceProvider);
             } catch (IOException ioException) {
                 // no-op
             }

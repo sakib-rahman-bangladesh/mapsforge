@@ -199,7 +199,7 @@
         <xs:attribute name="symbol-width" type="xs:positiveInteger" use="optional" />
         <xs:attribute name="symbol-height" type="xs:positiveInteger" use="optional" />
         <xs:attribute name="symbol-percent" type="xs:positiveInteger" use="optional" />
-        <xs:attribute name="align-center" default="false" type="xs:boolean" use="optional" />
+        <xs:attribute name="position" default="below_right" type="tns:position" use="optional" />
         <xs:attribute name="priority" default="0" type="xs:integer" use="optional" />
         <xs:attribute name="repeat" default="false" type="xs:boolean" use="optional" />
         <xs:attribute name="repeat-gap" default="200" type="xs:float" use="optional" />
@@ -232,7 +232,7 @@
         <xs:attribute name="stroke" default="#000000" type="tns:color" use="optional" />
         <xs:attribute name="stroke-width" default="0" type="tns:nonNegativeFloat" use="optional" />
         <xs:attribute name="repeat" default="true" type="xs:boolean" use="optional" />
-        <xs:attribute name="repeat-gap" default="50" type="xs:float" use="optional" />
+        <xs:attribute name="repeat-gap" default="100" type="xs:float" use="optional" />
         <xs:attribute name="repeat-start" default="10" type="xs:float" use="optional" />
         <xs:attribute name="rotate" default="true" type="xs:boolean" use="optional" />
     </xs:complexType>
@@ -246,6 +246,7 @@
         <xs:attribute name="symbol-width" type="xs:positiveInteger" use="optional" />
         <xs:attribute name="symbol-height" type="xs:positiveInteger" use="optional" />
         <xs:attribute name="symbol-percent" type="xs:positiveInteger" use="optional" />
+        <xs:attribute name="position" default="center" type="tns:position" use="optional" />
     </xs:complexType>
 
     <!-- rule elements -->
@@ -272,6 +273,7 @@
 
     <!-- hillshading element -->
     <xs:complexType name="hillShading">
+        <xs:attribute name="cat" type="xs:string" use="optional" />
         <xs:attribute name="zoom-min" default="5" type="xs:unsignedByte" use="optional" />
         <xs:attribute name="zoom-max" default="17" type="xs:unsignedByte" use="optional" />
         <xs:attribute name="magnitude" default="64" type="xs:unsignedByte" use="optional" />

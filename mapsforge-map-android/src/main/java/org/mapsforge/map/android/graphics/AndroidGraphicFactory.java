@@ -1,8 +1,9 @@
 /*
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014 Ludwig M Brinckmann
- * Copyright 2014-2017 devemux86
+ * Copyright 2014-2021 devemux86
  * Copyright 2017 usrusr
+ * Copyright 2018 Adrian Batzill
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -17,37 +18,21 @@
  */
 package org.mapsforge.map.android.graphics;
 
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap.Config;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.text.TextUtils;
-
-import org.mapsforge.core.graphics.Bitmap;
-import org.mapsforge.core.graphics.Canvas;
-import org.mapsforge.core.graphics.Color;
-import org.mapsforge.core.graphics.Display;
-import org.mapsforge.core.graphics.GraphicFactory;
-import org.mapsforge.core.graphics.Matrix;
-import org.mapsforge.core.graphics.Paint;
-import org.mapsforge.core.graphics.Path;
-import org.mapsforge.core.graphics.Position;
-import org.mapsforge.core.graphics.ResourceBitmap;
-import org.mapsforge.core.graphics.TileBitmap;
+import org.mapsforge.core.graphics.*;
 import org.mapsforge.core.mapelements.PointTextContainer;
 import org.mapsforge.core.mapelements.SymbolContainer;
 import org.mapsforge.core.model.BoundingBox;
 import org.mapsforge.core.model.Point;
 import org.mapsforge.map.model.DisplayModel;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -79,7 +64,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
 
     public static android.graphics.Bitmap convertToAndroidBitmap(Drawable drawable) {
         android.graphics.Bitmap bitmap;
-        if (drawable instanceof BitmapDrawable) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P && drawable instanceof BitmapDrawable) {
             bitmap = ((BitmapDrawable) drawable).getBitmap();
         } else {
             int width = drawable.getIntrinsicWidth();
@@ -114,8 +99,8 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         return new AndroidCanvas(canvas);
     }
 
-    public static void createInstance(Application app) {
-        INSTANCE = new AndroidGraphicFactory(app);
+    public static void createInstance(Context context) {
+        INSTANCE = new AndroidGraphicFactory(context);
     }
 
     /**
@@ -173,14 +158,14 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         return ((AndroidPath) path).path;
     }
 
-    private final Application application;
+    private final Context context;
     private File svgCacheDir;
 
-    private AndroidGraphicFactory(Application app) {
-        this.application = app;
-        if (app != null) {
-            // the scaledDensity is an approximate scale factor for the device
-            DisplayModel.setDeviceScaleFactor(app.getResources().getDisplayMetrics().scaledDensity);
+    private AndroidGraphicFactory(Context context) {
+        this.context = context;
+        if (context != null) {
+            // the density is an approximate scale factor for the device
+            DisplayModel.setDeviceScaleFactor(context.getResources().getDisplayMetrics().density);
         }
     }
 
@@ -258,8 +243,8 @@ public final class AndroidGraphicFactory implements GraphicFactory {
     }
 
     @Override
-    public ResourceBitmap createResourceBitmap(InputStream inputStream, int hash) throws IOException {
-        return new AndroidResourceBitmap(inputStream, hash);
+    public ResourceBitmap createResourceBitmap(InputStream inputStream, float scaleFactor, int width, int height, int percent, int hash) throws IOException {
+        return new AndroidResourceBitmap(inputStream, scaleFactor, width, height, percent, hash);
     }
 
     @Override
@@ -280,7 +265,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         if (this.svgCacheDir != null) {
             return new File(this.svgCacheDir, name).delete();
         }
-        return this.application.deleteFile(name);
+        return this.context.deleteFile(name);
     }
 
     /*
@@ -290,7 +275,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         if (this.svgCacheDir != null) {
             return this.svgCacheDir.list();
         }
-        return this.application.fileList();
+        return this.context.fileList();
     }
 
     /*
@@ -300,7 +285,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         if (this.svgCacheDir != null) {
             return new FileInputStream(new File(this.svgCacheDir, name));
         }
-        return this.application.openFileInput(name);
+        return this.context.openFileInput(name);
     }
 
     /*
@@ -310,7 +295,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         if (this.svgCacheDir != null) {
             return new FileOutputStream(new File(this.svgCacheDir, name), mode == Context.MODE_APPEND);
         }
-        return this.application.openFileOutput(name, mode);
+        return this.context.openFileOutput(name, mode);
     }
 
     @Override
@@ -318,7 +303,7 @@ public final class AndroidGraphicFactory implements GraphicFactory {
         // this allows loading of resource bitmaps from the Android assets folder
         String pathName = (TextUtils.isEmpty(relativePathPrefix) ? "" : relativePathPrefix) + src;
         try {
-            return this.application.getAssets().open(pathName);
+            return this.context.getAssets().open(pathName);
         } catch (IOException e) {
             throw new FileNotFoundException("invalid resource: " + pathName);
         }

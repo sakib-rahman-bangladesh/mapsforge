@@ -2,7 +2,7 @@
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014 Ludwig M Brinckmann
  * Copyright 2015-2017 devemux86
- * Copyright 2017 bailuk
+ * Copyright 2017 Lukas Bai
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -25,7 +25,7 @@ import org.mapsforge.core.model.MapPosition;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.model.FrameBufferModel;
 
-public class FrameBufferHA2 extends FrameBuffer {
+public class FrameBufferHA2 extends FrameBufferOld {
 
     /*
      *  lm: layer manager
@@ -47,6 +47,7 @@ public class FrameBufferHA2 extends FrameBuffer {
         this.allowSwap.disable();
     }
 
+    @Override
     public void adjustMatrix(float diffX, float diffY, float scaleFactor, Dimension mapViewDimension,
                              float pivotDistanceX, float pivotDistanceY) {
         synchronized (this.matrix) {
@@ -65,6 +66,7 @@ public class FrameBufferHA2 extends FrameBuffer {
         }
     }
 
+    @Override
     public synchronized void destroy() {
         this.odBitmap.destroy();
         this.lmBitmap.destroy();
@@ -74,6 +76,7 @@ public class FrameBufferHA2 extends FrameBuffer {
      * This is called from (Android) <code>MapView.onDraw</code>
      * and (Desktop) <code>MapView.paint</code>.
      */
+    @Override
     public void draw(GraphicContext graphicContext) {
         /*
          * Swap bitmaps here (and only here).
@@ -103,6 +106,7 @@ public class FrameBufferHA2 extends FrameBuffer {
     /**
      * This is called from <code>LayerManager</code> when drawing is finished.
      */
+    @Override
     public void frameFinished(MapPosition framePosition) {
         synchronized (this.allowSwap) {
             this.lmMapPosition = framePosition;
@@ -116,6 +120,7 @@ public class FrameBufferHA2 extends FrameBuffer {
      *
      * @return the bitmap of the second frame to draw on (may be null).
      */
+    @Override
     public Bitmap getDrawingBitmap() {
         /*
          * Layer manager only starts drawing a new bitmap when the last one is swapped (taken to
@@ -132,6 +137,7 @@ public class FrameBufferHA2 extends FrameBuffer {
         }
     }
 
+    @Override
     public void setDimension(Dimension dimension) {
         synchronized (this.matrix) {
             if (this.dimension != null && this.dimension.equals(dimension)) {

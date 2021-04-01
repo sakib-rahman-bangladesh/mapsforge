@@ -1,6 +1,16 @@
+apply plugin: 'application'
+
 dependencies {
     implementation project(":mapsforge-map-awt")
     implementation project(":mapsforge-themes")
+    testImplementation "junit:junit:$jUnitVersion"
+}
+
+mainClassName = "org.mapsforge.samples.awt.Samples"
+run {
+    if (project.hasProperty("args")) {
+        args project.getProperty("args").split(",")
+    }
 }
 
 task fatJar(type: Jar, dependsOn: classes) {
@@ -8,7 +18,7 @@ task fatJar(type: Jar, dependsOn: classes) {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     exclude 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.SF'
     manifest {
-        attributes 'Main-Class': 'org.mapsforge.samples.awt.Samples'
+        attributes 'Main-Class': "${mainClassName}"
     }
     with jar
 }

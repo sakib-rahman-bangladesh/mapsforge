@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 devemux86
+ * Copyright 2015-2019 devemux86
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -14,27 +14,24 @@
  */
 package org.mapsforge.samples.android;
 
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
-
 import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.model.BoundingBox;
 import org.mapsforge.core.model.LatLong;
 import org.mapsforge.core.model.Point;
+import org.mapsforge.map.android.graphics.AndroidBitmap;
 import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
 import org.mapsforge.map.layer.GroupLayer;
 import org.mapsforge.map.layer.overlay.Marker;
 import org.mapsforge.map.layer.renderer.TileRendererLayer;
 import org.mapsforge.poi.android.storage.AndroidPoiPersistenceManagerFactory;
-import org.mapsforge.poi.storage.ExactMatchPoiCategoryFilter;
-import org.mapsforge.poi.storage.PoiCategoryFilter;
-import org.mapsforge.poi.storage.PoiCategoryManager;
-import org.mapsforge.poi.storage.PoiPersistenceManager;
-import org.mapsforge.poi.storage.PointOfInterest;
+import org.mapsforge.poi.storage.*;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 
@@ -45,10 +42,11 @@ import java.util.Collection;
  */
 public class PoiSearchViewer extends DefaultTheme {
 
-    private static final String POI_FILE = Environment.getExternalStorageDirectory() + "/germany.poi";
+    private static final String POI_FILE = "berlin.poi";
     private static final String POI_CATEGORY = "Restaurants";
 
     private GroupLayer groupLayer;
+    private PoiPersistenceManager persistenceManager;
 
     @Override
     protected void createLayers() {
@@ -70,6 +68,20 @@ public class PoiSearchViewer extends DefaultTheme {
         mapView.getLayerManager().getLayers().add(tileRendererLayer);
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        persistenceManager = AndroidPoiPersistenceManagerFactory.getPoiPersistenceManager(new File(getExternalFilesDir(null), POI_FILE).getAbsolutePath());
+    }
+
+    @Override
+    protected void onDestroy() {
+        persistenceManager.close();
+
+        super.onDestroy();
+    }
+
     private class PoiSearchTask extends AsyncTask<BoundingBox, Void, Collection<PointOfInterest>> {
         private final WeakReference<PoiSearchViewer> weakActivity;
         private final String category;
@@ -82,24 +94,17 @@ public class PoiSearchViewer extends DefaultTheme {
         @Override
         protected Collection<PointOfInterest> doInBackground(BoundingBox... params) {
             // Search POI
-            PoiPersistenceManager persistenceManager = null;
             try {
-                persistenceManager = AndroidPoiPersistenceManagerFactory.getPoiPersistenceManager(POI_FILE);
                 PoiCategoryManager categoryManager = persistenceManager.getCategoryManager();
                 PoiCategoryFilter categoryFilter = new ExactMatchPoiCategoryFilter();
                 categoryFilter.addCategory(categoryManager.getPoiCategoryByTitle(category));
                 return persistenceManager.findInRect(params[0], categoryFilter, null, Integer.MAX_VALUE);
             } catch (Throwable t) {
                 Log.e(SamplesApplication.TAG, t.getMessage(), t);
-            } finally {
-                if (persistenceManager != null) {
-                    persistenceManager.close();
-                }
             }
             return null;
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         protected void onPostExecute(Collection<PointOfInterest> pointOfInterests) {
             final PoiSearchViewer activity = weakActivity.get();
@@ -113,7 +118,7 @@ public class PoiSearchViewer extends DefaultTheme {
 
             // Overlay POI
             groupLayer = new GroupLayer();
-            Bitmap bitmap = AndroidGraphicFactory.convertToBitmap(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? activity.getDrawable(R.drawable.marker_green) : activity.getResources().getDrawable(R.drawable.marker_green));
+            Bitmap bitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.marker_green));
             for (final PointOfInterest pointOfInterest : pointOfInterests) {
                 Marker marker = new MarkerImpl(pointOfInterest.getLatLong(), bitmap, 0, -bitmap.getHeight() / 2, pointOfInterest);
                 groupLayer.layers.add(marker);

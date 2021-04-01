@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 bailuk
+ * Copyright 2017 Lukas Bai
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -67,7 +67,7 @@ class FrameBufferBitmap {
                     wait();
                 }
             } catch (InterruptedException e) {
-                LOGGER.warning("FrameBufferHA interrupted");
+                LOGGER.fine("Frame buffer interrupted");
             }
         }
     }

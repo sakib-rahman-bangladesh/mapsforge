@@ -2,7 +2,7 @@
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014 Christian Pesch
  * Copyright 2014 Ludwig M Brinckmann
- * Copyright 2014-2017 devemux86
+ * Copyright 2014-2020 devemux86
  * Copyright 2017 usrusr
  *
  * This program is free software: you can redistribute it and/or modify it under the
@@ -42,13 +42,13 @@ import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
 import org.mapsforge.map.layer.renderer.TileRendererLayer;
-import org.mapsforge.map.model.MapViewPosition;
+import org.mapsforge.map.model.IMapViewPosition;
 import org.mapsforge.map.model.Model;
 import org.mapsforge.map.model.common.PreferencesFacade;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.InternalRenderTheme;
 
-import java.awt.Dimension;
+import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -57,10 +57,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.prefs.Preferences;
-
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.WindowConstants;
 
 public final class Samples {
     private static final GraphicFactory GRAPHIC_FACTORY = AwtGraphicFactory.INSTANCE;
@@ -77,12 +73,6 @@ public final class Samples {
      *             with possible SRTM hgt folder as 1st argument.
      */
     public static void main(String[] args) {
-        // Frame buffer HA2
-        Parameters.FRAME_BUFFER_HA2 = true;
-
-        // Multithreaded map rendering
-        Parameters.NUMBER_OF_THREADS = 2;
-
         // Square frame buffer
         Parameters.SQUARE_FRAME_BUFFER = false;
 
@@ -96,7 +86,7 @@ public final class Samples {
             args = Arrays.copyOfRange(args, 1, args.length);
         }
 
-        List<File> mapFiles = getMapFiles(args);
+        List<File> mapFiles = SHOW_RASTER_MAP ? null : getMapFiles(args);
         final MapView mapView = createMapView();
         final BoundingBox boundingBox = addLayers(mapView, mapFiles, hillsCfg);
 
@@ -106,7 +96,7 @@ public final class Samples {
         frame.setTitle("Mapsforge Samples");
         frame.add(mapView);
         frame.pack();
-        frame.setSize(new Dimension(800, 600));
+        frame.setSize(1024, 768);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
@@ -150,7 +140,8 @@ public final class Samples {
         if (SHOW_RASTER_MAP) {
             // Raster
             mapView.getModel().displayModel.setFixedTileSize(tileSize);
-            TileSource tileSource = OpenStreetMapMapnik.INSTANCE;
+            OpenStreetMapMapnik tileSource = OpenStreetMapMapnik.INSTANCE;
+            tileSource.setUserAgent("mapsforge-samples-awt");
             TileDownloadLayer tileDownloadLayer = createTileDownloadLayer(tileCache, mapView.getModel().mapViewPosition, tileSource);
             layers.add(tileDownloadLayer);
             tileDownloadLayer.start();
@@ -189,7 +180,7 @@ public final class Samples {
     }
 
     @SuppressWarnings("unused")
-    private static TileDownloadLayer createTileDownloadLayer(TileCache tileCache, MapViewPosition mapViewPosition, TileSource tileSource) {
+    private static TileDownloadLayer createTileDownloadLayer(TileCache tileCache, IMapViewPosition mapViewPosition, TileSource tileSource) {
         return new TileDownloadLayer(tileCache, mapViewPosition, tileSource, GRAPHIC_FACTORY) {
             @Override
             public boolean onTap(LatLong tapLatLong, Point layerXY, Point tapXY) {
@@ -199,7 +190,7 @@ public final class Samples {
         };
     }
 
-    private static TileRendererLayer createTileRendererLayer(TileCache tileCache, MapDataStore mapDataStore, MapViewPosition mapViewPosition, HillsRenderConfig hillsRenderConfig) {
+    private static TileRendererLayer createTileRendererLayer(TileCache tileCache, MapDataStore mapDataStore, IMapViewPosition mapViewPosition, HillsRenderConfig hillsRenderConfig) {
         TileRendererLayer tileRendererLayer = new TileRendererLayer(tileCache, mapDataStore, mapViewPosition, false, true, false, GRAPHIC_FACTORY, hillsRenderConfig) {
             @Override
             public boolean onTap(LatLong tapLatLong, Point layerXY, Point tapXY) {
@@ -213,7 +204,11 @@ public final class Samples {
 
     private static File getDemFolder(String[] args) {
         if (args.length == 0) {
-            throw new IllegalArgumentException("missing argument: <mapFile>");
+            if (SHOW_RASTER_MAP) {
+                return null;
+            } else {
+                throw new IllegalArgumentException("missing argument: <mapFile>");
+            }
         }
 
         File demFolder = new File(args[0]);

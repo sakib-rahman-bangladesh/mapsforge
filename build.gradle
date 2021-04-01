@@ -1,23 +1,26 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        jcenter {
+            content {
+                // https://youtrack.jetbrains.com/issue/IDEA-261387
+                includeModule("org.jetbrains.trove4j", "trove4j")
+            }
+        }
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.android.tools.build:gradle:4.0.2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
-}
-
-def filterProjects(filter) {
-    return subprojects.findAll { project -> filter.contains(project.name) }
 }
 
 allprojects {
     group = 'org.mapsforge'
     version = 'master-SNAPSHOT'
     ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-    ext.androidBuildVersionTools = "27.0.2"
+
+    ext.androidBuildVersionTools = "30.0.3"
     ext.jUnitVersion = "4.12"
 
     if (JavaVersion.current().isJava8Compatible()) {
@@ -29,126 +32,40 @@ allprojects {
     }
 }
 
-static def androidCompileSdk() { return 27 }
+static def androidCompileSdk() { return 30 }
 
-// Minimum API Level by Support Library
-static def androidMinSdk() { return 14 }
+// 14 for Support Library, 16 for sqlite-android
+static def androidMinSdk() { return 16 }
 
-static def androidTargetSdk() { return 22 }
+static def androidTargetSdk() { return 30 }
 
 static def versionCode() { return 1 }
 
 def versionName() { return version }
 
-// Configuration injection for all subprojects
-
 subprojects {
     repositories {
         google()
-        jcenter()
+        jcenter {
+            content {
+                // https://youtrack.jetbrains.com/issue/IDEA-261387
+                includeModule("org.jetbrains.trove4j", "trove4j")
+            }
+        }
+        mavenCentral()
     }
 
     tasks.withType(JavaCompile) {
         sourceCompatibility = JavaVersion.VERSION_1_7
         targetCompatibility = JavaVersion.VERSION_1_7
-    }
-}
-
-// Configuration for all plain Java projects
-project.ext.javalibraryprojects = ["mapsforge-core", "mapsforge-map", "mapsforge-themes", "mapsforge-map-reader", "mapsforge-map-awt", "mapsforge-map-writer", "mapsforge-poi", "mapsforge-poi-awt", "mapsforge-poi-writer", "spatialite-android"]
-project.ext.javaprojects = project.javalibraryprojects + ["mapsforge-samples-awt"]
-
-configure(filterProjects(project.javalibraryprojects)) {
-    apply plugin: 'maven'
-
-    if (project.hasProperty("SONATYPE_USERNAME")) {
-        afterEvaluate {
-            project.apply from: "${rootProject.projectDir}/deploy.gradle"
-        }
-    }
-}
-
-configure(filterProjects(project.javaprojects)) {
-    apply plugin: 'java-library'
-    //apply plugin: 'checkstyle'
-
-    dependencies {
-        testImplementation "junit:junit:$jUnitVersion"
-    }
-
-    /*checkstyle {
-        showViolations = false  // turn on for reporting
-        // as of Gradle 2.2.1 every sub project seems to require a checkstyle file, this
-        // directive forces all projects to use the shared file in the root project
-        configFile = rootProject.file('config/checkstyle/checkstyle.xml')
-    }*/
-
-    // set java source encoding, otherwise some tests fail
-    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-}
-
-// Configuration for Android projects
-project.ext.androidlibraryprojects = ["mapsforge-map-android", "mapsforge-poi-android"]
-project.ext.androidapkprojects = ["mapsforge-samples-android"]
-project.ext.androidprojects = project.androidlibraryprojects + project.androidapkprojects
-
-// TODO get checkstyle and pmd working for android (right now it does not work out of the box, so better wait for official fix)
-
-configure(filterProjects(project.androidapkprojects)) {
-    apply plugin: 'com.android.application'
-}
-
-configure(filterProjects(project.androidlibraryprojects)) {
-    apply plugin: 'com.android.library'
-    apply plugin: 'com.github.dcendents.android-maven'
-
-    android.libraryVariants.all { variant ->
-        def name = variant.buildType.name
-        if (name == "debug")
-            return
-        def task = project.tasks.create "jar${name.capitalize()}", Jar
-        task.dependsOn variant.javaCompiler
-        task.from variant.javaCompiler.destinationDir
-        artifacts.add('archives', task)
-    }
-
-    if (project.hasProperty("SONATYPE_USERNAME")) {
-        afterEvaluate {
-            project.apply from: "${rootProject.projectDir}/deploy.gradle"
-        }
-    }
-}
-
-configure(filterProjects(project.androidprojects)) {
-
-    android {
-        compileSdkVersion androidCompileSdk()
-        buildToolsVersion "$androidBuildVersionTools"
-
-        compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_7
-            targetCompatibility JavaVersion.VERSION_1_7
-        }
-
-        defaultConfig {
-            versionCode versionCode()
-            versionName versionName()
-            minSdkVersion androidMinSdk()
-            targetSdkVersion androidTargetSdk()
-        }
-
-        sourceSets {
-            main {
-                manifest.srcFile 'AndroidManifest.xml'
-                java.srcDirs = ['src/main/java']
-                resources.srcDirs = ['src']
-                res.srcDirs = ['res']
-                assets.srcDirs = ['assets']
+        options.encoding = 'UTF-8'
+        if (JavaVersion.current().isJava9Compatible()) {
+            if (!project.properties.containsKey('android')) {
+                if (project.name.contains('writer'))
+                    options.compilerArgs.addAll(['--release', '8'])
+                else
+                    options.compilerArgs.addAll(['--release', '7'])
             }
-        }
-
-        lintOptions {
-            abortOnError false
         }
     }
 }

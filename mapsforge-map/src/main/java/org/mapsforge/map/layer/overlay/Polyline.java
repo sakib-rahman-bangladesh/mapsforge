@@ -1,7 +1,7 @@
 /*
  * Copyright 2010, 2011, 2012, 2013 mapsforge.org
  * Copyright 2014 Ludwig M Brinckmann
- * Copyright 2015-2017 devemux86
+ * Copyright 2015-2018 devemux86
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -40,10 +40,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Polyline extends Layer {
 
+    private static final byte STROKE_MIN_ZOOM = 12;
+
+    private BoundingBox boundingBox;
     private final GraphicFactory graphicFactory;
     private final boolean keepAligned;
-    private final List<LatLong> latLongs = new CopyOnWriteArrayList<LatLong>();
+    private final List<LatLong> latLongs = new CopyOnWriteArrayList<>();
     private Paint paintStroke;
+    private double strokeIncrease = 1;
 
     /**
      * @param paintStroke    the initial {@code Paint} used to stroke this polyline (may be null).
@@ -67,6 +71,21 @@ public class Polyline extends Layer {
         this.graphicFactory = graphicFactory;
     }
 
+    public synchronized void addPoint(LatLong point) {
+        this.latLongs.add(point);
+        updatePoints();
+    }
+
+    public synchronized void addPoints(List<LatLong> points) {
+        this.latLongs.addAll(points);
+        updatePoints();
+    }
+
+    public synchronized void clear() {
+        this.latLongs.clear();
+        updatePoints();
+    }
+
     public synchronized boolean contains(Point tapXY, MapViewProjection mapViewProjection) {
         // Touch min 20 px at baseline mdpi (160dpi)
         double distance = Math.max(20 / 2 * this.displayModel.getScaleFactor(),
@@ -85,6 +104,10 @@ public class Polyline extends Layer {
     @Override
     public synchronized void draw(BoundingBox boundingBox, byte zoomLevel, Canvas canvas, Point topLeftPoint) {
         if (this.latLongs.isEmpty() || this.paintStroke == null) {
+            return;
+        }
+
+        if (this.boundingBox != null && !this.boundingBox.intersects(boundingBox)) {
             return;
         }
 
@@ -112,7 +135,13 @@ public class Polyline extends Layer {
         if (this.keepAligned) {
             this.paintStroke.setBitmapShaderShift(topLeftPoint);
         }
+        float strokeWidth = this.paintStroke.getStrokeWidth();
+        if (this.strokeIncrease > 1) {
+            float scale = (float) Math.pow(this.strokeIncrease, Math.max(zoomLevel - STROKE_MIN_ZOOM, 0));
+            this.paintStroke.setStrokeWidth(strokeWidth * scale);
+        }
         canvas.drawPath(path, this.paintStroke);
+        this.paintStroke.setStrokeWidth(strokeWidth);
     }
 
     /**
@@ -130,6 +159,13 @@ public class Polyline extends Layer {
     }
 
     /**
+     * @return the base to scale polyline stroke per zoom (default 1 not scale).
+     */
+    public synchronized double getStrokeIncrease() {
+        return strokeIncrease;
+    }
+
+    /**
      * @return true if it keeps the bitmap aligned with the map, to avoid a
      * moving effect of a bitmap shader, false otherwise.
      */
@@ -144,4 +180,20 @@ public class Polyline extends Layer {
         this.paintStroke = paintStroke;
     }
 
+    public synchronized void setPoints(List<LatLong> points) {
+        this.latLongs.clear();
+        this.latLongs.addAll(points);
+        updatePoints();
+    }
+
+    /**
+     * @param strokeIncrease the base to scale polyline stroke per zoom (default 1 not scale).
+     */
+    public synchronized void setStrokeIncrease(double strokeIncrease) {
+        this.strokeIncrease = strokeIncrease;
+    }
+
+    private void updatePoints() {
+        this.boundingBox = this.latLongs.isEmpty() ? null : new BoundingBox(this.latLongs);
+    }
 }
